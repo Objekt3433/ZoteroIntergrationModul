@@ -1,0 +1,7 @@
+zotero_integration.settings_form:
+  path: '/admin/config/services/zotero-integration'
+  defaults:
+    _form: '\Drupal\zotero_integration\Form\ZoteroSettingsForm'
+    _title: 'Zotero Integration'
+  requirements:
+    _permission: 'administer site configuration'

@@ -1,0 +1,22 @@
+zotero_integration.settings:
+  type: config_object
+  label: 'Zotero Integration Einstellungen'
+  mapping:
+    api_key:
+      type: string
+      label: 'Zotero API Key'
+    library_type:
+      type: string
+      label: 'Bibliothekstyp (user/group)'
+    library_id:
+      type: string
+      label: 'Library ID'
+    collection_key:
+      type: string
+      label: 'Collection Key (optional)'
+    item_limit:
+      type: integer
+      label: 'Maximale Anzahl Einträge'
+    cache_max_age:
+      type: integer
+      label: 'Cache-Dauer in Sekunden'

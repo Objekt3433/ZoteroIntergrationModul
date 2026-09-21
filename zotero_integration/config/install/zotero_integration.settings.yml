@@ -1,0 +1,6 @@
+api_key: ''
+library_type: 'user'
+library_id: ''
+collection_key: ''
+item_limit: 25
+cache_max_age: 3600

@@ -1,0 +1,24 @@
+<div class="zotero-bibliography">
+  {% if title %}
+    <h2 class="zotero-bibliography__title">{{ title }}</h2>
+  {% endif %}
+
+  {% if entries %}
+    <ul class="zotero-bibliography__list">
+      {% for entry in entries %}
+        <li class="zotero-bibliography__item">
+          {% if entry.citation %}
+            {{ entry.citation|raw }}
+          {% else %}
+            {{ entry.title }}
+          {% endif %}
+          {% if entry.url %}
+            &nbsp;<a href="{{ entry.url }}" target="_blank" rel="noopener">↗</a>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="zotero-bibliography__empty">{{ empty_message }}</p>
+  {% endif %}
+</div>

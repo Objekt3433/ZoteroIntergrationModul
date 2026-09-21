@@ -1,0 +1,22 @@
+<?php
+
+/**
+ * @file
+ * Modul-Hooks für Zotero Integration.
+ */
+
+/**
+ * Implements hook_theme().
+ */
+function zotero_integration_theme($existing, $type, $theme, $path) {
+  return [
+    'zotero_bibliography' => [
+      'variables' => [
+        'title' => NULL,
+        'entries' => [],
+        'empty_message' => NULL,
+      ],
+      'template' => 'zotero-bibliography',
+    ],
+  ];
+}

@@ -1,0 +1,7 @@
+name: Zotero Integration
+type: module
+description: 'Bindet eine Zotero-Bibliothek (User oder Group) über die Zotero Web API in Drupal ein.'
+package: Custom
+core_version_requirement: ^10 || ^11
+dependencies:
+  - drupal:block

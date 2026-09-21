@@ -1,0 +1,5 @@
+zotero_integration.settings_form:
+  title: 'Zotero Integration'
+  description: 'Zotero-Bibliothek und API-Zugang konfigurieren.'
+  route_name: zotero_integration.settings_form
+  parent: system.admin_config_services

@@ -1,0 +1,8 @@
+services:
+  zotero_integration.api_client:
+    class: Drupal\zotero_integration\ZoteroApiClient
+    arguments: ['@http_client', '@config.factory', '@cache.default', '@logger.channel.zotero_integration']
+
+  logger.channel.zotero_integration:
+    parent: logger.channel_base
+    arguments: ['zotero_integration']
