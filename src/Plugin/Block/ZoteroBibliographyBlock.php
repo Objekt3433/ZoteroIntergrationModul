@@ -65,7 +65,7 @@ class ZoteroBibliographyBlock extends BlockBase implements ContainerFactoryPlugi
     foreach ($items as $item) {
       $data = $item['data'] ?? [];
       // "citation" wird von der Zotero API als vorformatiertes HTML mitgeliefert.
-      $citation = $item['citation']['citation'] ?? NULL;
+      $citation = $item['citation'] ?? NULL;
       $entries[] = [
         'title' => $data['title'] ?? '',
         'url' => $data['url'] ?? '',

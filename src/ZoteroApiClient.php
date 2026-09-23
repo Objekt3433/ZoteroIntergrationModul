@@ -53,6 +53,7 @@ class ZoteroApiClient {
    * @return array
    *   Liste dekodierter Zotero-Items, oder leeres Array bei Fehler.
    */
+
   public function getItems(array $overrides = []) {
     $library_type = $overrides['library_type'] ?? $this->config->get('library_type') ?: 'user';
     $library_id = $overrides['library_id'] ?? $this->config->get('library_id');
@@ -70,7 +71,7 @@ class ZoteroApiClient {
       return $cached->data;
     }
 
-    // Bibliothekstyp im Pfad ist "users" oder "groups" (Plural).
+    // Bibliothekstyp im Pfad ist "users" oder "groups"
     $type_segment = $library_type === 'group' ? 'groups' : 'users';
 
     $path = "/{$type_segment}/{$library_id}";
@@ -78,10 +79,12 @@ class ZoteroApiClient {
 
     $query = [
       'format' => 'json',
-      'include' => 'data,citation',
+      'include' => 'data,citation,bib',
       'limit' => $limit,
       'sort' => 'dateModified',
       'direction' => 'desc',
+      'style' => 'apa', // APA Zitationsstyle 
+      'locale' =>'de-DE', // Deutsche Zitationsformate 
     ];
 
     $headers = [];
@@ -108,5 +111,17 @@ class ZoteroApiClient {
 
     return $items;
   }
+  /**
+   * TODO implement
+   * 
+   * @param array $overrides 
+   * Optionale Überschreibung einzelner Konfigwerte, z. B. im Block gesetzt.
+   * 
+   * @return array
+   * Liste der Zotero Collections 
+   * 
+  */
+  public function getCollections (array $overrides = []){
 
+  }
 }
