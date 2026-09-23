@@ -50,6 +50,7 @@ class ZoteroBibliographyBlock extends BlockBase implements ContainerFactoryPlugi
       '#title' => $this->t('Überschrift (optional)'),
       '#default_value' => $this->configuration['title_override'],
     ];
+    //TODO: add collection Dropdown Field
     return $form;
   }
 
