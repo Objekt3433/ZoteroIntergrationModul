@@ -83,7 +83,7 @@ class ZoteroApiClient {
       'limit' => $limit,
       'sort' => 'dateModified',
       'direction' => 'desc',
-      'style' => 'apa', // APA Zitationsstyle 
+      'style' => 'apa', // APA Zitationsstil 
       'locale' =>'de-DE', // Deutsche Zitationsformate 
     ];
 
@@ -122,6 +122,26 @@ class ZoteroApiClient {
    * 
   */
   public function getCollections (array $overrides = []){
+    $library_type = $overrides['library_type'] ?? $this->config->get('library_type') ?: 'user';
+    $library_id = $overrides['library_id'] ?? $this->config->get('library_id');
+    $collection_key = $overrides['collection_key'] ?? $this->config->get('collection_key');
+    $limit = $overrides['item_limit'] ?? $this->config->get('item_limit') ?: 25;
+    $api_key = $this->config->get('api_key');
 
+    if (empty($library_id)) {
+      return [];
+    }
+    $cache_id = 'zotero_integration:collections:' . md5($library_type, $library_id);
+    if ($cached = $this->cache->get($cache_id)) {
+      return $cached->data;
+    }
+    $type_segment = $library_type === 'group' ? 'groups' : 'users';
+    $path = "/{$type_segment}/{$library_id}/collections";
+
+    $headers = [];
+    if (!empty($api_key)) {
+      $headers['Zotero-API-Key'] = $api_key;
+    }
+    
   }
 }
