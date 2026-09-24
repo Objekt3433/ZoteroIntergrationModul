@@ -142,6 +142,30 @@ class ZoteroApiClient {
     if (!empty($api_key)) {
       $headers['Zotero-API-Key'] = $api_key;
     }
-    
+    $raw = [];
+    $start = 0;
+    $page_limit = 100;
+
+    try {
+      do {
+        $response = $this->httpClient->request('GET', self::API_BASE . $path, [
+          'query' => [
+            'format' => 'json',
+            'limit' => $page_limit,
+            'start' => $start,
+          ],
+          'headers' => $headers,
+          'timeout' => 10,
+        ]);
+        $body = (string) $response->getBody();
+        $page = json_decode($body, TRUE) ?: [];
+        $raw = array_merge($raw, $page);
+        $start += $page_limit;
+      } while (count($page) === $page_limit);
+    }
+    catch (GuzzleException $e) {
+      $this->logger->error('Zotero API Fehler (Collections): @message', ['@message' => $e->getMessage()]);
+      return [];
+    }
   }
 }
