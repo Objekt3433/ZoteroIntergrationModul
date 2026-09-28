@@ -167,5 +167,39 @@ class ZoteroApiClient {
       $this->logger->error('Zotero API Fehler (Collections): @message', ['@message' => $e->getMessage()]);
       return [];
     }
+    // Flache Liste in [key => data] umbauen, um Eltern-Kind-Beziehungen aufzulösen.
+    $by_key = [];
+    foreach ($raw as $collection) {
+      $key = $collection['key'] ?? NULL;
+      if (!$key) {
+        continue;
+      }
+      $by_key[$key] = [
+        'name' => $collection['data']['name'] ?? $key,
+        'parent' => $collection['data']['parentCollection'] ?? FALSE,
+      ];
+    }
+
+    // Baumstruktur in eine sortierte, eingerückte Liste überführen
+    // (geeignet für #options eines Select-Feldes).
+    $result = [];
+    $build_branch = function ($parent_key, $depth) use (&$build_branch, &$by_key, &$result) {
+      foreach ($by_key as $key => $collection) {
+        if ($collection['parent'] === $parent_key) {
+          $result[$key] = [
+            'name' => $collection['name'],
+            'depth' => $depth,
+          ];
+          $build_branch($key, $depth + 1);
+        }
+      }
+    };
+    $build_branch(FALSE, 0);
+
+    $max_age = (int) ($this->config->get('cache_max_age') ?: 3600);
+    $this->cache->set($cache_id, $result, \Drupal::time()->getRequestTime() + $max_age, ['zotero_integration']);
+
+    return $result;
   }
+  
 }
