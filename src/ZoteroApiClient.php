@@ -9,7 +9,7 @@ use GuzzleHttp\Exception\GuzzleException;
 use Psr\Log\LoggerInterface;
 
 /**
- * Kleiner Client für die Zotero Web API (v3).
+ * Client für die Zotero Web API (v3).
  *
  * @see https://www.zotero.org/support/dev/web_api/v3/start
  */
@@ -83,8 +83,8 @@ class ZoteroApiClient {
       'limit' => $limit,
       'sort' => 'dateModified',
       'direction' => 'desc',
-      'style' => 'apa', // APA Zitationsstil 
-      'locale' =>'de-DE', // Deutsche Zitationsformate 
+      'style' => $overrides['style'] ?? $this->config->get('style') ?: 'din-1505-2',
+      'locale' => $overrides['locale'] ?? $this->config->get('locale') ?: 'de-DE',
     ];
 
     $headers = [];

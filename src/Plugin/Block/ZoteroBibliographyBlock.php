@@ -40,6 +40,7 @@ class ZoteroBibliographyBlock extends BlockBase implements ContainerFactoryPlugi
   public function defaultConfiguration() {
     return [
       'title_override' => '',
+      'collection_key' => '',
     ] + parent::defaultConfiguration();
   }
 
@@ -50,23 +51,39 @@ class ZoteroBibliographyBlock extends BlockBase implements ContainerFactoryPlugi
       '#title' => $this->t('Überschrift (optional)'),
       '#default_value' => $this->configuration['title_override'],
     ];
-    //TODO: add collection Dropdown Field
+    // Collections für das Dropdown laden. Schlägt die API-Abfrage fehl
+    // (z. B. keine Library ID konfiguriert), bleibt nur "Alle Einträge".
+    $options = ['' => $this->t('- Alle Einträge (keine Collection) -')];
+    foreach ($this->zoteroClient->getCollections() as $key => $collection) {
+      $prefix = str_repeat('— ', $collection['depth']);
+      $options[$key] = $prefix . $collection['name'];
+    }
+    $form['collection_key'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Collection'),
+      '#description' => $this->t('Welche Zotero-Collection soll dieser Block anzeigen? Wenn keine Collections aufgelistet sind, bitte zuerst Library ID/API-Key unter den globalen Zotero-Einstellungen prüfen.'),
+      '#options' => $options,
+      '#default_value' => $this->configuration['collection_key'],
+    ];
     return $form;
   }
 
   public function blockSubmit($form, \Drupal\Core\Form\FormStateInterface $form_state) {
     parent::blockSubmit($form, $form_state);
     $this->configuration['title_override'] = $form_state->getValue('title_override');
+    $this->configuration['collection_key'] = $form_state->getValue('collection_key');
   }
 
   public function build() {
-    $items = $this->zoteroClient->getItems();
+    $items = $this->zoteroClient->getItems([
+      'collection_key' => $this->configuration['collection_key'] ?: NULL,
+    ]);
 
     $entries = [];
     foreach ($items as $item) {
       $data = $item['data'] ?? [];
       // "citation" wird von der Zotero API als vorformatiertes HTML mitgeliefert. 
-      $citation = $item['citation'] ?? NULL;
+      $citation = $item ['citation'] ?? NULL;
       $entries[] = [
         'title' => $data['title'] ?? '',
         'url' => $data['url'] ?? '',
