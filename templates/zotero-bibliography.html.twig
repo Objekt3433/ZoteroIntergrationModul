@@ -7,6 +7,9 @@
     <ul class="zotero-bibliography__list">
       {% for entry in entries %}
         <li class="zotero-bibliography__item">
+           {% if entry.bib %}
+            {{ entry.bib }}
+          {% else %}
           {% if entry.citation %}
             {{ entry.citation|raw }}
           {% else %}
@@ -22,3 +25,4 @@
     <p class="zotero-bibliography__empty">{{ empty_message }}</p>
   {% endif %}
 </div>
+
