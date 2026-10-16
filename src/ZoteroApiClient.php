@@ -80,7 +80,7 @@ class ZoteroApiClient {
 
     $query = [
       'format' => 'json',
-      'include' => 'data,citation',
+      'include' => 'bib,data,citation',
       'style' => $overrides['style'] ?? $this->config->get('style') ?: 'din-1505-2',
       'locale' => $overrides['locale'] ?? $this->config->get('locale') ?: 'de-DE',
       'limit' => $limit,
