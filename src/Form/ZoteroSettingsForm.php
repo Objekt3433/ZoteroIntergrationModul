@@ -54,6 +54,20 @@ class ZoteroSettingsForm extends ConfigFormBase {
       '#default_value' => $config->get('api_key'),
     ];
 
+    $form['style'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('CSL-Zitierstil'),
+      '#description' => $this->t('Style-ID aus dem <a href="@url" target="_blank">Zotero Style Repository</a>, z. B. din-1505-2, apa, chicago-author-date.', ['@url' => 'https://www.zotero.org/styles']),
+      '#default_value' => $config->get('style') ?: 'din-1505-2',
+    ];
+
+    $form['locale'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Locale für Zitationen'),
+      '#description' => $this->t('Sprachcode, z. B. de-DE oder en-US.'),
+      '#default_value' => $config->get('locale') ?: 'de-DE',
+    ];
+
     $form['item_limit'] = [
       '#type' => 'number',
       '#title' => $this->t('Maximale Anzahl Einträge'),
@@ -70,7 +84,45 @@ class ZoteroSettingsForm extends ConfigFormBase {
       '#description' => $this->t('Wie lange die Antworten der Zotero-API zwischengespeichert werden, bevor neu abgefragt wird.'),
     ];
 
-    return parent::buildForm($form, $form_state);
+    $form = parent::buildForm($form, $form_state);
+
+    // Zusätzlicher Button: speichert die Einstellungen wie gewohnt und führt
+    // danach direkt eine Testabfrage gegen die Zotero API aus, damit man
+    // ohne Umweg über die Logs sieht, ob/warum es nicht funktioniert.
+    $form['actions']['test'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Speichern und Verbindung testen'),
+      '#submit' => ['::submitForm', '::testConnectionSubmit'],
+    ];
+
+    return $form;
+  }
+
+  /**
+   * Submit-Handler des "Speichern und Verbindung testen"-Buttons.
+   *
+   * Läuft nach dem regulären submitForm() (speichert also bereits die
+   * aktuellen Formularwerte) und zeigt das Ergebnis einer echten,
+   * ungecachten Testabfrage an.
+   */
+  public function testConnectionSubmit(array &$form, FormStateInterface $form_state) {
+    $result = \Drupal::service('zotero_integration.api_client')->testConnection();
+    if ($result['success']) {
+      $this->messenger()->addStatus($result['message']);
+    }
+    else {
+      $this->messenger()->addError($this->t('Zotero-Verbindungstest fehlgeschlagen: @message', ['@message' => $result['message']]));
+    }
+
+    if (empty($this->config('zotero_integration.settings')->get('collection_key'))) {
+      $collections = \Drupal::service('zotero_integration.api_client')->getCollections();
+      if ($collections) {
+        $this->messenger()->addStatus($this->t('@count Collection(s) gefunden: @names', [
+          '@count' => count($collections),
+          '@names' => implode(', ', array_column($collections, 'name')),
+        ]));
+      }
+    }
   }
 
   public function submitForm(array &$form, FormStateInterface $form_state) {
@@ -79,6 +131,8 @@ class ZoteroSettingsForm extends ConfigFormBase {
       ->set('library_id', trim($form_state->getValue('library_id')))
       ->set('collection_key', trim($form_state->getValue('collection_key')))
       ->set('api_key', trim($form_state->getValue('api_key')))
+      ->set('style', trim($form_state->getValue('style')) ?: 'din-1505-2')
+      ->set('locale', trim($form_state->getValue('locale')) ?: 'de-DE')
       ->set('item_limit', (int) $form_state->getValue('item_limit'))
       ->set('cache_max_age', (int) $form_state->getValue('cache_max_age'))
       ->save();
