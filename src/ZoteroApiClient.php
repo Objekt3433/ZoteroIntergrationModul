@@ -146,16 +146,22 @@ class ZoteroApiClient {
 
     try {
       $response = $this->httpClient->request('GET', self::API_BASE . $path, [
-        'query' => ['format' => 'json', 'limit' => 1],
+        'query' => [
+          'format' => 'json',
+          'limit' => 100,
+          'include' => 'data',
+          ],
         'headers' => $headers,
         'timeout' => 10,
       ]);
       $total = $response->getHeaderLine('Total-Results');
       $count = $total !== '' ? (int) $total : count(json_decode((string) $response->getBody(), TRUE) ?: []);
+      $items = json_decode((string) $response->getBody(), TRUE) ?: [];
       return [
         'success' => TRUE,
         'message' => sprintf('Verbindung erfolgreich. %d Einträge in der Bibliothek gefunden (HTTP %d).', $count, $response->getStatusCode()),
         'count' => $count,
+        'items' => $items,
       ];
     }
     catch (GuzzleException $e) {

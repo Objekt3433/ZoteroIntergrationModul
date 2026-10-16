@@ -94,6 +94,32 @@ class ZoteroSettingsForm extends ConfigFormBase {
       '#value' => $this->t('Speichern und Verbindung testen'),
       '#submit' => ['::submitForm', '::testConnectionSubmit'],
     ];
+    $test_result = $form_state->get('test_result');
+if ($test_result) {
+  $form['test_result'] = [
+    '#type' => 'details',
+    '#title' => $this->t('Ergebnis des Verbindungstests'),
+    '#open' => TRUE,
+    '#weight' => 100,
+  ];
+
+  $form['test_result']['message'] = [
+    '#markup' => '<p><strong>' . ($test_result['success'] ? '✔ ' : '✘ ') . '</strong>'
+      . htmlspecialchars($test_result['message']) . '</p>',
+  ];
+
+  $json = json_encode(
+    $test_result['items'] ?? [],
+    JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+  );
+
+  $form['test_result']['items'] = [
+    '#prefix' => '<pre style="max-height:600px; overflow:auto;">',
+    '#plain_text' => $json,
+    '#suffix' => '</pre>',
+  ];
+}
+    
 
     return $form;
   }
@@ -107,6 +133,15 @@ class ZoteroSettingsForm extends ConfigFormBase {
    */
   public function testConnectionSubmit(array &$form, FormStateInterface $form_state) {
     $result = \Drupal::service('zotero_integration.api_client')->testConnection();
+
+    //Ergebnis zwischenspeichern 
+
+    $form_state->set('test_result', $result);
+
+    //Formular neu aufbauen, damit die Meldung angezeigt wird
+
+    $form_state->setRebuild(TRUE);
+
     if ($result['success']) {
       $this->messenger()->addStatus($result['message']);
     }
