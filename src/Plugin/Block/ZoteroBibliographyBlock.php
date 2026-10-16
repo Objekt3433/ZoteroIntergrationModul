@@ -6,6 +6,8 @@ use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\zotero_integration\ZoteroApiClient;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Render\Markup;
+use Drupal\Component\Utility\Xss;
 
 /**
  * Zeigt eine Zotero-Literaturliste als Block an.
