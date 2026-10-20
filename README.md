@@ -52,6 +52,10 @@ Bindet eine Zotero-Bibliothek (User oder Group) über die offizielle Zotero Web 
   aus (`|raw`). Das ist für die offizielle Zotero-API unkritisch, sollte
   aber im Hinterkopf behalten werden, falls die Datenquelle mal geändert wird.
 
+## Test Unit 
+ Die Unittests können ohne Website mit folgenden Befehl im Hauptordner des Drupalprojektes durchgeführt werden: 
+ vendor/bin/phpunit -c web/core web/modules/custom/zotero_integration/tests/src/Unit
+
 ## TODOS/Roadmap: 
 
 1. Mehr als 100 Einträge über Schleife realisieren 
