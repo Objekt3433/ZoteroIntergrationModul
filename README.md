@@ -53,8 +53,8 @@ Bindet eine Zotero-Bibliothek (User oder Group) über die offizielle Zotero Web 
   aber im Hinterkopf behalten werden, falls die Datenquelle mal geändert wird.
 
 ## Test Unit 
- Die Unittests können ohne Website mit folgenden Befehl im Hauptordner des Drupalprojektes durchgeführt werden: 
- vendor/bin/phpunit -c web/core web/modules/custom/zotero_integration/tests/src/Unit
+ Die Unittests können ohne Website mit folgenden Befehl in einer DDEV-Umgebung durchgeführt werden: 
+   ddev exec vendor/bin/phpunit -c web/core web/modules/custom/zotero_integration/tests/src/Unit --testdox
 
 ## TODOS/Roadmap: 
 
