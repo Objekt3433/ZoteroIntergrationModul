@@ -140,7 +140,7 @@ class ZoteroApiClientTest extends UnitTestCase {
     $client = $this->buildClient([new Response(200, [], '[]')], ['collection_key' => 'ABCD1234']);
     $client->getItems();
 
-    $this->assertSame('/groups/123/collections/ABCD1234/items', $this->pathOf());
+    $this->assertSame('/groups/123/collections/ABCD1234/items/top', $this->pathOf());
   }
 
   public function testBlockOverrideBeatsGlobalCollection(): void {
@@ -154,8 +154,8 @@ class ZoteroApiClientTest extends UnitTestCase {
     // NULL (Block ohne Auswahl) fällt auf die globale Einstellung zurück.
     $client->getItems(['collection_key' => NULL]);
 
-    $this->assertSame('/groups/123/collections/BLOCK001/items', $this->pathOf(0));
-    $this->assertSame('/groups/123/collections/GLOBAL01/items', $this->pathOf(1));
+    $this->assertSame('/groups/123/collections/BLOCK001/items/top', $this->pathOf(0));
+    $this->assertSame('/groups/123/collections/GLOBAL01/items/top', $this->pathOf(1));
   }
 
   public function testLibraryOverrideChangesPath(): void {
@@ -333,7 +333,7 @@ class ZoteroApiClientTest extends UnitTestCase {
     $this->assertStringContainsString('342', $result['message']);
     $this->assertStringContainsString('HTTP 200', $result['message']);
     // Der Test holt bewusst nur ein einzelnes Item.
-    $this->assertSame('1', $this->queryOf()['limit']);
+    $this->assertSame('100', $this->queryOf()['limit']);
   }
 
   public function testConnectionFallsBackToBodyCount(): void {
