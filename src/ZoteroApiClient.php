@@ -2,6 +2,7 @@
 
 namespace Drupal\zotero_integration;
 
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use GuzzleHttp\ClientInterface;
@@ -66,17 +67,28 @@ class ZoteroApiClient {
       $this->logger->warning('Zotero Integration: keine Library ID konfiguriert.');
       return [];
     }
+    // "v2" im Schlüssel, weil sich das Format der Cache-Einträge geändert hat.
+    $cache_id = 'zotero_integration:items:v2:' . md5(implode('|', [$library_type, $library_id, $collection_key, $limit, $api_key]));
+    $max_age = (int) ($this->config->get('cache_max_age') ?: 3600);
+    $now = \Drupal::time()->getRequestTime();
 
-    $cache_id = 'zotero_integration:items:' . md5(implode('|', [$library_type, $library_id, $collection_key, $limit, $api_key]));
-    if ($cached = $this->cache->get($cache_id)) {
-      return $cached->data;
+    // Gespeicherten Stand lesen: Items, Version und Zeitpunkt der letzten Prüfung.
+    $stored = NULL;
+    if (($cached = $this->cache->get($cache_id))
+      && is_array($cached->data)
+      && isset($cached->data['version'], $cached->data['items'], $cached->data['checked_at'])) {
+      $stored = $cached->data;
+    }
+
+    if ($stored && ($now - $stored['checked_at']) < $max_age) {
+      return $stored['items'];
     }
 
     // Bibliothekstyp im Pfad ist "users" oder "groups" (Plural).
     $type_segment = $library_type === 'group' ? 'groups' : 'users';
 
     $path = "/{$type_segment}/{$library_id}";
-    $path .= $collection_key ? "/collections/{$collection_key}/items/top" : '/items';
+    $path .= $collection_key ? "/collections/{$collection_key}/items/top" : '/items/top';
 
     $query = [
       'format' => 'json',
@@ -92,6 +104,11 @@ class ZoteroApiClient {
     if (!empty($api_key)) {
       $headers['Zotero-API-Key'] = $api_key;
     }
+    if ($stored) {
+      // Zotero antwortet mit 304 ohne Daten, wenn sich seit dieser Version nichts geändert hat.
+      $headers['If-Modified-Since-Version'] = (string) $stored['version'];
+    }
+
 
     try {
       $response = $this->httpClient->request('GET', self::API_BASE . $path, [
@@ -99,19 +116,30 @@ class ZoteroApiClient {
         'headers' => $headers,
         'timeout' => 10,
       ]);
-      $body = (string) $response->getBody();
-      $items = json_decode($body, TRUE) ?: [];
     }
     catch (GuzzleException $e) {
       $this->logger->error('Zotero API Fehler beim Abruf von @path: @details', [
         '@path' => $path,
         '@details' => $this->describeException($e),
       ]);
-      return [];
+      //Bei Fehler die gespeicherten Items zurückgeben, damit die Seite nicht leer ist.
+      return $stored ? $stored['items'] : [];
+    }
+    if ($stored && $response->getStatusCode() === 304) {
+      // Nichts geändert: alte Items behalten, nur den Prüfzeitpunkt erneuern.
+      $items = $stored['items'];
+      $version = $stored['version'];
+    }
+    else {
+      $items = json_decode((string) $response->getBody(), TRUE) ?: [];
+      $version = (int) $response->getHeaderLine('Last-Modified-Version');
     }
 
-    $max_age = (int) ($this->config->get('cache_max_age') ?: 3600);
-    $this->cache->set($cache_id, $items, \Drupal::time()->getRequestTime() + $max_age, ['zotero_integration']);
+    $this->cache->set($cache_id, [
+      'version' => $version,
+      'items' => $items,
+      'checked_at' => $now,
+    ], Cache::PERMANENT, ['zotero_integration']);
 
     return $items;
   }
@@ -137,7 +165,7 @@ class ZoteroApiClient {
 
     $type_segment = $library_type === 'group' ? 'groups' : 'users';
     $path = "/{$type_segment}/{$library_id}";
-    $path .= $collection_key ? "/collections/{$collection_key}/items/top" : '/items';
+    $path .= $collection_key ? "/collections/{$collection_key}/items/top" : '/items/top';
 
     $headers = [];
     if (!empty($api_key)) {

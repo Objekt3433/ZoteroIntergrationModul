@@ -10,7 +10,7 @@
         {% if entry.bib %}
           {{ entry.bib }}
         {% elseif entry.citation %}
-          {{ entry.citation|raw }}
+          {{ entry.citation }}
         {% else %}
           {{ entry.title }}
         {% endif %}

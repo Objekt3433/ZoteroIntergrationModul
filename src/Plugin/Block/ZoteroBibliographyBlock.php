@@ -88,8 +88,8 @@ class ZoteroBibliographyBlock extends BlockBase implements ContainerFactoryPlugi
       // "bib" wird von der Zotero API als vorformatiertes HTML mitgeliefert. 
       $bib = !empty($item['bib'])? Markup::create(Xss::filterAdmin($item['bib'])): NULL;
 
-      // "citation" wird von der Zotero API als vorformatiertes HTML mitgeliefert. 
-      $citation = $item ['citation'] ?? NULL;
+       
+      $citation = !empty($item['citation']) ? Markup::create(Xss::filterAdmin($item['citation'])) : NULL;
       $entries[] = [
         'title' => $data['title'] ?? '',
         'url' => $data['url'] ?? '',
