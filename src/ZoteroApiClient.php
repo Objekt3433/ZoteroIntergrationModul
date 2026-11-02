@@ -76,7 +76,7 @@ class ZoteroApiClient {
     $type_segment = $library_type === 'group' ? 'groups' : 'users';
 
     $path = "/{$type_segment}/{$library_id}";
-    $path .= $collection_key ? "/collections/{$collection_key}/items" : '/items';
+    $path .= $collection_key ? "/collections/{$collection_key}/items/top" : '/items';
 
     $query = [
       'format' => 'json',
@@ -137,7 +137,7 @@ class ZoteroApiClient {
 
     $type_segment = $library_type === 'group' ? 'groups' : 'users';
     $path = "/{$type_segment}/{$library_id}";
-    $path .= $collection_key ? "/collections/{$collection_key}/items" : '/items';
+    $path .= $collection_key ? "/collections/{$collection_key}/items/top" : '/items';
 
     $headers = [];
     if (!empty($api_key)) {

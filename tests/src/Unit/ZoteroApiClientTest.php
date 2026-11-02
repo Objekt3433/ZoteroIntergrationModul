@@ -178,7 +178,7 @@ class ZoteroApiClientTest extends UnitTestCase {
     $client->getItems(['style' => 'chicago-author-date']);
 
     $query = $this->queryOf(0);
-    $this->assertSame('data,citation', $query['include']);
+    $this->assertSame('bib,data,citation', $query['include']);
     $this->assertSame('apa', $query['style']);
     $this->assertSame('de-DE', $query['locale']);
     $this->assertSame('chicago-author-date', $this->queryOf(1)['style']);
