@@ -4,3 +4,8 @@ library_id: ''
 collection_key: ''
 item_limit: 25
 cache_max_age: 3600
+style: 'din-1505-2'
+locale: 'de-DE'
+output_mode: 'block'
+bibtex_directory: 'private://zotero'
+bibtex_filename: 'library.bib'

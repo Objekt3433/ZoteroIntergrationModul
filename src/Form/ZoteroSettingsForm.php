@@ -4,6 +4,8 @@ namespace Drupal\zotero_integration\Form;
 
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\File\FileSystemInterface;
+use Drupal\Core\Site\Settings;
 
 /**
  * Einstellungsformular für die Zotero-Anbindung.
@@ -20,7 +22,44 @@ class ZoteroSettingsForm extends ConfigFormBase {
 
   public function buildForm(array $form, FormStateInterface $form_state) {
     $config = $this->config('zotero_integration.settings');
+    
+    $form['output_mode'] = [
+      '#type' => 'radios',
+      '#title' => $this->t('Betriebsmodus'),
+      '#options' => [
+        'block' => $this->t('Literaturliste als Block anzeigen'),
+        'bibtex' => $this->t('Nur BibTeX-Datei erzeugen (für den Import durch ein anderes Modul)'),
+      ],
+      '#default_value' => $config->get('output_mode') ?: 'block',
+      '#description' => $this->t('Im Modus „BibTeX“ wird der Zotero-Block nicht mehr angezeigt.'),
+      '#required' => TRUE,
+    ];
 
+    $form['bibtex'] = [
+      '#type' => 'details',
+      '#title' => $this->t('BibTeX-Datei'),
+      '#open' => TRUE,
+      '#states' => [
+        'visible' => [
+          ':input[name="output_mode"]' => ['value' => 'bibtex'],
+        ],
+      ],
+    ];
+
+    $form['bibtex']['bibtex_directory'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Zielverzeichnis'),
+      '#description' => $this->t('Zum Beispiel private://zotero. Das Verzeichnis wird bei Bedarf angelegt. Für private:// muss in der settings.php ein privater Dateipfad eingerichtet sein.'),
+      '#default_value' => $config->get('bibtex_directory') ?: 'private://zotero',
+    ];
+
+    $form['bibtex']['bibtex_filename'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Dateiname'),
+      '#description' => $this->t('Muss auf .bib enden, zum Beispiel library.bib.'),
+      '#default_value' => $config->get('bibtex_filename') ?: 'library.bib',
+    ];
+    
     $form['library_type'] = [
       '#type' => 'select',
       '#title' => $this->t('Bibliothekstyp'),
@@ -159,7 +198,31 @@ if ($test_result) {
       }
     }
   }
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    parent::validateForm($form, $form_state);
 
+    // Die Dateieinstellungen sind nur im BibTeX-Modus relevant.
+    if ($form_state->getValue('output_mode') !== 'bibtex') {
+      return;
+    }
+
+    $directory = trim($form_state->getValue('bibtex_directory'));
+    $filename = trim($form_state->getValue('bibtex_filename'));
+
+    if (!preg_match('/^[A-Za-z0-9._-]+\.bib$/', $filename)) {
+      $form_state->setErrorByName('bibtex_filename', $this->t('Der Dateiname darf nur Buchstaben, Ziffern, Punkt, Unterstrich und Bindestrich enthalten und muss auf .bib enden.'));
+    }
+
+    if (!preg_match('#^(private|public)://#', $directory) || str_contains($directory, '..')) {
+      $form_state->setErrorByName('bibtex_directory', $this->t('Das Verzeichnis muss mit private:// oder public:// beginnen und darf kein „..“ enthalten.'));
+    }
+    elseif (str_starts_with($directory, 'private://') && !Settings::get('file_private_path')) {
+      $form_state->setErrorByName('bibtex_directory', $this->t('Das private Dateisystem ist nicht eingerichtet. Setze in der settings.php $settings[\'file_private_path\'] oder nutze public://.'));
+    }
+    elseif (!\Drupal::service('file_system')->prepareDirectory($directory, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS)) {
+      $form_state->setErrorByName('bibtex_directory', $this->t('Das Verzeichnis @dir existiert nicht oder ist nicht beschreibbar.', ['@dir' => $directory]));
+    }
+  }
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $this->config('zotero_integration.settings')
       ->set('library_type', $form_state->getValue('library_type'))
@@ -170,6 +233,9 @@ if ($test_result) {
       ->set('locale', trim($form_state->getValue('locale')) ?: 'de-DE')
       ->set('item_limit', (int) $form_state->getValue('item_limit'))
       ->set('cache_max_age', (int) $form_state->getValue('cache_max_age'))
+      ->set('output_mode', $form_state->getValue('output_mode'))
+      ->set('bibtex_directory', trim($form_state->getValue('bibtex_directory')) ?: 'private://zotero')
+      ->set('bibtex_filename', trim($form_state->getValue('bibtex_filename')) ?: 'library.bib')
       ->save();
 
     // Gecachte Zotero-Antworten invalidieren, damit neue Einstellungen sofort greifen.
