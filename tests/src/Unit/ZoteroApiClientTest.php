@@ -119,7 +119,7 @@ class ZoteroApiClientTest extends UnitTestCase {
     $client = $this->buildClient([new Response(200, [], '[]')]);
     $client->getItems();
 
-    $this->assertSame('/groups/123/items', $this->pathOf());
+    $this->assertSame('/groups/123/items/top', $this->pathOf());
     $this->assertSame('secret', $this->history[0]['request']->getHeaderLine('Zotero-API-Key'));
     $this->assertSame('json', $this->queryOf()['format']);
   }
@@ -133,7 +133,7 @@ class ZoteroApiClientTest extends UnitTestCase {
     $client = $this->buildClient([new Response(200, [], '[]')], ['library_type' => 'user']);
     $client->getItems();
 
-    $this->assertSame('/users/123/items', $this->pathOf());
+    $this->assertSame('/users/123/items/top', $this->pathOf());
   }
 
   public function testCollectionKeyAddsCollectionPath(): void {
@@ -162,7 +162,7 @@ class ZoteroApiClientTest extends UnitTestCase {
     $client = $this->buildClient([new Response(200, [], '[]')]);
     $client->getItems(['library_type' => 'user', 'library_id' => '999']);
 
-    $this->assertSame('/users/999/items', $this->pathOf());
+    $this->assertSame('/users/999/items/top', $this->pathOf());
   }
 
   public function testNoApiKeyOmitsHeader(): void {
