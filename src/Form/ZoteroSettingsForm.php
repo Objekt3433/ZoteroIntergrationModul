@@ -6,7 +6,8 @@ use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Site\Settings;
-
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 /**
  * Einstellungsformular für die Zotero-Anbindung.
  */
@@ -133,6 +134,13 @@ class ZoteroSettingsForm extends ConfigFormBase {
       '#value' => $this->t('Speichern und Verbindung testen'),
       '#submit' => ['::submitForm', '::testConnectionSubmit'],
     ];
+    // Testweiser Download der BibTeX-Datei, ohne etwas auf dem Server zu speichern.
+    $form['actions']['download'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('BibTeX testweise herunterladen'),
+      '#submit' => ['::downloadBibtexSubmit'],
+      '#limit_validation_errors' => [],
+    ];
     $test_result = $form_state->get('test_result');
 if ($test_result) {
   $form['test_result'] = [
@@ -197,6 +205,31 @@ if ($test_result) {
         ]));
       }
     }
+  }
+    /**
+   * Holt die BibTeX und liefert sie als Download aus (nichts wird gespeichert).
+   */
+  public function downloadBibtexSubmit(array &$form, FormStateInterface $form_state) {
+    $result = \Drupal::service('zotero_integration.api_client')->fetchBibtex();
+
+    if ($result['status'] !== 'ok') {
+      $this->messenger()->addError($this->t('BibTeX-Abruf fehlgeschlagen: @message', [
+        '@message' => $result['message'] ?: $result['status'],
+      ]));
+      return;
+    }
+
+    $response = new Response($result['bibtex']);
+    $response->headers->set('Content-Type', 'application/x-bibtex; charset=UTF-8');
+    // Fester Dateiname, damit nie ein ungültiger Name im Header landet.
+    $response->headers->set('Content-Disposition', $response->headers->makeDisposition(
+      ResponseHeaderBag::DISPOSITION_ATTACHMENT,
+      'zotero-test.bib'
+    ));
+    $response->headers->set('Cache-Control', 'no-store, private');
+
+    // Eine gesetzte Antwort ersetzt die normale Weiterleitung nach dem Absenden.
+    $form_state->setResponse($response);
   }
   public function validateForm(array &$form, FormStateInterface $form_state) {
     parent::validateForm($form, $form_state);

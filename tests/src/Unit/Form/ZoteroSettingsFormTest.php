@@ -13,6 +13,8 @@ use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\Tests\UnitTestCase;
 use Drupal\zotero_integration\Form\ZoteroSettingsForm;
+use Drupal\zotero_integration\ZoteroApiClient;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * @coversDefaultClass \Drupal\zotero_integration\Form\ZoteroSettingsForm
@@ -303,6 +305,62 @@ class ZoteroSettingsFormTest extends UnitTestCase {
     $this->submit($this->allValues(['output_mode' => 'block']), $saved);
 
     $this->assertSame('block', $saved['output_mode']);
+  }
+    public function testBuildFormHasDownloadButtonWithoutValidation(): void {
+    $form = $this->buildFormArray([]);
+
+    $this->assertSame(['::downloadBibtexSubmit'], $form['actions']['download']['#submit']);
+    $this->assertSame([], $form['actions']['download']['#limit_validation_errors']);
+  }
+
+  public function testDownloadButtonReturnsBibtexAsAttachment(): void {
+    $bibtex = "@article{a2020,\n\ttitle = {T},\n}\n";
+    $client = $this->createMock(ZoteroApiClient::class);
+    $client->expects($this->once())->method('fetchBibtex')->willReturn([
+      'status' => 'ok',
+      'bibtex' => $bibtex,
+      'version' => 7,
+      'count' => 1,
+      'skipped' => 0,
+      'renamed' => [],
+      'message' => '',
+    ]);
+    $this->container->set('zotero_integration.api_client', $client);
+
+    $form = [];
+    $form_state = new FormState();
+    $this->buildFormObject()->downloadBibtexSubmit($form, $form_state);
+
+    $response = $form_state->getResponse();
+    $this->assertInstanceOf(Response::class, $response);
+    $this->assertSame($bibtex, $response->getContent());
+    $this->assertStringContainsString('attachment', $response->headers->get('Content-Disposition'));
+    $this->assertStringContainsString('.bib', $response->headers->get('Content-Disposition'));
+    $this->assertStringContainsString('no-store', $response->headers->get('Cache-Control'));
+  }
+
+  public function testDownloadButtonShowsErrorAndSendsNoFile(): void {
+    $client = $this->createMock(ZoteroApiClient::class);
+    $client->method('fetchBibtex')->willReturn([
+      'status' => 'error',
+      'bibtex' => '',
+      'version' => 0,
+      'count' => 0,
+      'skipped' => 0,
+      'renamed' => [],
+      'message' => 'HTTP 403 Forbidden',
+    ]);
+    $this->container->set('zotero_integration.api_client', $client);
+
+    $messenger = $this->createMock(MessengerInterface::class);
+    $messenger->expects($this->once())->method('addError');
+    $this->container->set('messenger', $messenger);
+
+    $form = [];
+    $form_state = new FormState();
+    $this->buildFormObject()->downloadBibtexSubmit($form, $form_state);
+
+    $this->assertNull($form_state->getResponse());
   }
 
 }
