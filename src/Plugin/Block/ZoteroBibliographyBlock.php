@@ -6,6 +6,10 @@ use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\zotero_integration\ZoteroApiClient;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Render\Markup;
+use Drupal\Component\Utility\Xss;
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Session\AccountInterface;
 
 /**
  * Zeigt eine Zotero-Literaturliste als Block an.
@@ -36,7 +40,13 @@ class ZoteroBibliographyBlock extends BlockBase implements ContainerFactoryPlugi
       $container->get('zotero_integration.api_client')
     );
   }
+  protected function blockAccess(AccountInterface $account) {
+    $mode = \Drupal::config('zotero_integration.settings')->get('output_mode') ?: 'block';
 
+    // Das Config-Cache-Tag sorgt dafür, dass ein Moduswechsel sofort wirkt.
+    return AccessResult::allowedIf($mode === 'block')
+      ->addCacheTags(['config:zotero_integration.settings']);
+  }
   public function defaultConfiguration() {
     return [
       'title_override' => '',
@@ -82,11 +92,16 @@ class ZoteroBibliographyBlock extends BlockBase implements ContainerFactoryPlugi
     $entries = [];
     foreach ($items as $item) {
       $data = $item['data'] ?? [];
-      // "citation" wird von der Zotero API als vorformatiertes HTML mitgeliefert. 
-      $citation = $item ['citation'] ?? NULL;
+
+      // "bib" wird von der Zotero API als vorformatiertes HTML mitgeliefert. 
+      $bib = !empty($item['bib'])? Markup::create(Xss::filterAdmin($item['bib'])): NULL;
+
+       
+      $citation = !empty($item['citation']) ? Markup::create(Xss::filterAdmin($item['citation'])) : NULL;
       $entries[] = [
         'title' => $data['title'] ?? '',
         'url' => $data['url'] ?? '',
+        'bib' => $bib,
         'citation' => $citation,
       ];
     }

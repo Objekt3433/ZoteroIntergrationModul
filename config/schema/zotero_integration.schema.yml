@@ -20,3 +20,18 @@ zotero_integration.settings:
     cache_max_age:
       type: integer
       label: 'Cache-Dauer in Sekunden'
+    style:
+      type: string
+      label: 'CSL-Zitierstil'
+    locale:
+      type: string
+      label: 'Locale für Zitationen'
+    output_mode:
+      type: string
+      label: 'Betriebsmodus (block/bibtex)'
+    bibtex_directory:
+      type: string
+      label: 'Zielverzeichnis der BibTeX-Datei'
+    bibtex_filename:
+      type: string
+      label: 'Dateiname der BibTeX-Datei'
