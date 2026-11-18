@@ -18,6 +18,16 @@ use Psr\Log\LoggerInterface;
  */
 class ZoteroApiClientBibtexTest extends UnitTestCase {
 
+/**
+ * Summary of setUp
+ * Test werden aktuelle nicht ausgeführt, da die BibTeX-Funktionalität nicht mehr benötigt wird.
+ */
+protected function setUp(): void
+{
+    parent::setUp();
+
+    $this->markTestSkipped('Bibtex-Funktionalität ist deaktiviert, da sie nicht mehr benötigt wird. Tests werden daher nicht ausgeführt.');
+}
   protected array $history = [];
 
   // ---------------------------------------------------------------------

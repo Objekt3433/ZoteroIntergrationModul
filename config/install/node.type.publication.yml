@@ -1,0 +1,10 @@
+langcode: de
+status: true
+dependencies: {  }
+name: 'Publikation'
+type: publication
+description: 'Aus Zotero importierte Publikationen.'
+help: ''
+new_revision: false
+preview_mode: 1
+display_submitted: false
