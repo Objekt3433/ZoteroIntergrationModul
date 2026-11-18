@@ -3,7 +3,8 @@
 Drupal-Modul, das eine Zotero-Bibliothek (persönlich oder Gruppe) über die offizielle Zotero Web API v3 einbindet. Es kann
 
 - die Literaturliste als **Block** anzeigen und
-- die Bibliothek als **BibTeX** abrufen, zum Beispiel für den Import durch ein anderes Modul.
+- die Bibliothek als **BibTeX** abrufen, zum Beispiel für den Import durch ein anderes Modul. Aktuell deaktiviert.
+- In Development: die Bibliothek als eigenen Inhaltsytp Importieren. 
 
 ## Status
 
@@ -13,18 +14,18 @@ Drupal-Modul, das eine Zotero-Bibliothek (persönlich oder Gruppe) über die off
 | Caching mit Versionsprüfung (nur bei Änderungen neu laden) | fertig |
 | BibTeX abrufen: sortiert, eindeutige Zitierschlüssel, auch für große Bibliotheken | fertig |
 | BibTeX testweise herunterladen (ohne etwas zu speichern) | fertig |
-| BibTeX-Datei automatisch schreiben (Drush/Cron) und an ein anderes Modul übergeben | geplant |
 
-**Wichtig:** Der Betriebsmodus „Nur BibTeX-Datei erzeugen“ blendet derzeit den Block aus und speichert Zielverzeichnis und Dateiname. Die Datei wird noch **nicht** automatisch geschrieben. Bis dahin steht der Testdownload zur Verfügung (siehe [BibTeX-Export](#bibtex-export)).
+
+**Wichtig:** Der Betriebsmodus „Nur BibTeX-Datei erzeugen“ ist aktuell nicht verfügbar Es steht nur der Testdownload einer Bibtexdatei zur Verfügung (siehe [BibTeX-Export](#bibtex-export)).
 
 ## Voraussetzungen
 
-- Drupal 11. Die `info.yml` erlaubt `^10 || ^11`, entwickelt und getestet wurde aber nur mit Drupal 11, Drupal 10 ist ungetestet.
+- Drupal 11. Die `info.yml` erlaubt `^10 || ^11`, entwickelt und getestet wurde aber nur mit Drupal 11, Drupal 10 ist ungetestet. TODO: Drupal 12 Support.
 - Die PHP-Version, die Drupal 11 verlangt (8.3 oder neuer)
-- Core-Modul **Block**
+- Core-Modul **Block** & **Node**
 - Eine Zotero-Bibliothek, für private Bibliotheken zusätzlich ein API-Key
 - Ausgehende HTTPS-Verbindungen vom Server zu `api.zotero.org`
-- Nur für den BibTeX-Modus mit `private://`: ein privater Dateipfad in der `settings.php` (siehe [Fehlersuche](#fehlersuche))
+- Aktuell nicht benötigt: Nur für den BibTeX-Modus mit `private://`: ein privater Dateipfad in der `settings.php` (siehe [Fehlersuche](#fehlersuche)) 
 
 ## Installation
 
@@ -49,10 +50,12 @@ Die Standardwerte in `config/install/` werden nur beim **Installieren** des Modu
 
 - **Betriebsmodus**
   - *Literaturliste als Block anzeigen*: der Block ist aktiv (Standard).
-  - *Nur BibTeX-Datei erzeugen*: der Block wird nicht mehr angezeigt, auch wenn er platziert ist.
-- **BibTeX-Datei** (nur sichtbar im Modus „BibTeX“)
-  - *Zielverzeichnis*: muss mit `private://` oder `public://` beginnen und darf kein `..` enthalten. Standard: `private://zotero`. Das Verzeichnis wird beim Speichern angelegt, falls es fehlt.
-  - *Dateiname*: nur Buchstaben, Ziffern, `.`, `_` und `-`, muss auf `.bib` enden. Standard: `library.bib`.
+  - *Entity*: Importiert die Zotero Bibliothek als eigenen Inhaltstyp "Publikationen" 
+  - Deaktiviert:
+    - *Nur BibTeX-Datei erzeugen*: der Block wird nicht mehr angezeigt, auch wenn er platziert ist.
+    - **BibTeX-Datei** (nur sichtbar im Modus „BibTeX“)
+    - *Zielverzeichnis*: muss mit `private://` oder `public://` beginnen und darf kein `..` enthalten. Standard: `private://zotero`. Das Verzeichnis wird beim Speichern angelegt, falls es fehlt.
+    - *Dateiname*: nur Buchstaben, Ziffern, `.`, `_` und `-`, muss auf `.bib` enden. Standard: `library.bib`.
 - **Bibliothekstyp**: `user` (persönliche Bibliothek) oder `group` (Gruppenbibliothek).
 - **Library ID**: die numerische ID.
   - User: die `userID` unter [zotero.org/settings/keys](https://www.zotero.org/settings/keys).
@@ -83,7 +86,8 @@ Pro Eintrag zeigt der Block den formatierten Literaturverzeichnis-Eintrag (`bib`
 
 Im Modus „BibTeX“ ist der Block nicht sichtbar.
 
-## BibTeX-Export
+## BibTeX-Export (deaktiviert)
+Aktuell nur als [Download](#testdownload).
 
 Die Methode `ZoteroApiClient::fetchBibtex()` holt die Bibliothek als BibTeX-Text.
 
@@ -139,7 +143,7 @@ if ($result['status'] === 'ok') {
 
 Der Export verwendet keinen Cache.
 
-### Testdownload
+### Testdownload (deaktiviert)
 
 Der Button **BibTeX testweise herunterladen** holt die BibTeX und liefert sie als Datei `zotero-test.bib` an den Browser. Es wird nichts auf dem Server gespeichert.
 
@@ -234,7 +238,7 @@ Mit `--filter` lässt sich eine einzelne Klasse starten, zum Beispiel `--filter 
 | Datei | Prüft |
 | --- | --- |
 | `ZoteroApiClientTest.php` | Items abrufen, Request-Aufbau, Cache und Versionsprüfung, Collections, Verbindungstest, Fehlermeldungen |
-| `ZoteroApiClientBibtexTest.php` | BibTeX-Abruf, Sortierung, eindeutige Zitierschlüssel, Wiederholung bei Änderungen, Fehlerfälle |
+Aktuell gesklipped: | `ZoteroApiClientBibtexTest.php` | BibTeX-Abruf, Sortierung, eindeutige Zitierschlüssel, Wiederholung bei Änderungen, Fehlerfälle | 
 | `Form/ZoteroSettingsFormTest.php` | Formularfelder, Prüfung von Verzeichnis und Dateiname, Speichern, Testdownload |
 | `Plugin/Block/ZoteroBibliographyBlockTest.php` | Sichtbarkeit des Blocks je Betriebsmodus |
 | `ConfigFilesTest.php` | Standardwerte und Config-Schema passen zusammen |
@@ -246,9 +250,8 @@ Noch nicht abgedeckt sind Kernel- und Browser-Tests, etwa das tatsächliche Spei
 
 Geplant, in dieser Reihenfolge:
 
-1. **BibTeX-Datei automatisch schreiben:** über eine temporäre Datei und anschließendes Umbenennen, damit nie eine halbe Datei gelesen wird. Die Version des letzten Exports wird in der State-API gespeichert. Ausgelöst per Drush-Befehl und Cron.
-2. **Übergabe an das Modul, das aus der BibTeX die Entities erstellt:** als Datei an vereinbartem Ort, als Event oder als Service, je nach Zielmodul.
-3. **Download der gespeicherten Datei** über eine eigene Route mit eigener Berechtigung.
-4. **Block:** mehr als 100 Einträge (Paging), Sortierung der Ausgabe, Sortierfilter für Besucher.
-5. **Kernel-Tests** für Formular speichern, Block-Rendering und Dateischreiben.
-6. **Aufräumen:** statische Aufrufe wie `\Drupal::time()` und `\Drupal::config()` durch Dependency Injection ersetzen, das macht den Code leichter testbar.
+1. **Enity:** Import der Bibliothek als Inhaltstyp mit prüfen von Dublikaten. 
+2. **Synchronisation:** Nach erstmaligen Importieren soll die Möglichkeit eingerichtet werden, die einträge regelmäßig mit der Zotero Datenbank zu Synchronisieren. Hierbei kann das Zeitintervall festgelegt werden.  
+3. **Block:** mehr als 100 Einträge (Paging), Sortierung der Ausgabe, Sortierfilter für Besucher. Optionen pro Blöck nach Tags zu filtern 
+3. **Kernel-Tests** für Formular speichern, Block-Rendering und Dateischreiben.
+4. **Aufräumen:** statische Aufrufe wie `\Drupal::time()` und `\Drupal::config()` durch Dependency Injection ersetzen, das macht den Code leichter testbar.

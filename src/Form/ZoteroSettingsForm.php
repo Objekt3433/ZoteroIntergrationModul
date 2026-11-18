@@ -29,13 +29,14 @@ class ZoteroSettingsForm extends ConfigFormBase {
       '#title' => $this->t('Betriebsmodus'),
       '#options' => [
         'block' => $this->t('Literaturliste als Block anzeigen'),
-        'bibtex' => $this->t('Nur BibTeX-Datei erzeugen (für den Import durch ein anderes Modul)'),
+        'entity' => $this->t('Literaturliste auf Website als eigenen Entity Inhaltstyp importieren (für Views)'),
+      //  'bibtex' => $this->t('Nur BibTeX-Datei erzeugen (für den Import durch ein anderes Modul)'),
       ],
       '#default_value' => $config->get('output_mode') ?: 'block',
-      '#description' => $this->t('Im Modus „BibTeX“ wird der Zotero-Block nicht mehr angezeigt.'),
+      //'#description' => $this->t('Im Modus „BibTeX“ wird der Zotero-Block nicht mehr angezeigt.'),
       '#required' => TRUE,
     ];
-
+    /** Aktuell ist der BibTeX-Modus deaktiviert, da er nicht mehr benötigt wird. 
     $form['bibtex'] = [
       '#type' => 'details',
       '#title' => $this->t('BibTeX-Datei'),
@@ -60,7 +61,7 @@ class ZoteroSettingsForm extends ConfigFormBase {
       '#description' => $this->t('Muss auf .bib enden, zum Beispiel library.bib.'),
       '#default_value' => $config->get('bibtex_filename') ?: 'library.bib',
     ];
-    
+    */
     $form['library_type'] = [
       '#type' => 'select',
       '#title' => $this->t('Bibliothekstyp'),
@@ -79,7 +80,7 @@ class ZoteroSettingsForm extends ConfigFormBase {
       '#default_value' => $config->get('library_id'),
       '#required' => TRUE,
     ];
-
+    //**TODO: Collections der Bibliothek als Dropdown auswählen.  */
     $form['collection_key'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Collection Key (optional)'),
@@ -126,9 +127,22 @@ class ZoteroSettingsForm extends ConfigFormBase {
 
     $form = parent::buildForm($form, $form_state);
 
-    // Zusätzlicher Button: speichert die Einstellungen wie gewohnt und führt
+
+    //TODO: Importfunktion konfigurieren. 
+    $form['actions']['import'] = ['#type' => 'submit',
+      '#value' => $this->t('Importieren'),
+      //'#submit' => ['::submitForm', '::import'],
+    ];
+
+    //TODO: Synchronisation aktivieren. 
+    $form['action']['sync'] = [
+      '#value'=> $this-> t('Synchronisation starten'),
+      // '#submit# => ['::submitForm', 'sync_library‚']
+    ];
+
+    //** Zusätzlicher Button: speichert die Einstellungen wie gewohnt und führt 
     // danach direkt eine Testabfrage gegen die Zotero API aus, damit man
-    // ohne Umweg über die Logs sieht, ob/warum es nicht funktioniert.
+    //ohne Umweg über die Logs sieht, ob/warum es nicht funktioniert. */
     $form['actions']['test'] = [
       '#type' => 'submit',
       '#value' => $this->t('Speichern und Verbindung testen'),

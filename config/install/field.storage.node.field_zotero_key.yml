@@ -1,0 +1,23 @@
+langcode: de
+status: true
+dependencies:
+  module:
+    - node
+  enforced:
+    module:
+      - zotero_integration
+id: node.field_zotero_key
+field_name: field_zotero_key
+entity_type: node
+type: string
+settings:
+  max_length: 8
+  is_ascii: true
+  case_sensitive: true
+module: core
+locked: false
+cardinality: 1
+translatable: false
+indexes: { }
+persist_with_no_fields: false
+custom_storage: false
